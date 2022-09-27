@@ -10,7 +10,7 @@ import requestFactory from "../utility/requestFactory.js";
 export const options = {
   thresholds: {
     "checks{scenario:embellish_one_image}": ["rate > 0.99"],
-    "iteration_duration{scenario:embellish_one_image}": [`max<10000`],
+    "iteration_duration{scenario:embellish_one_image}": [`max<15000`],
     "checks{scenario:embellish_two_image}": ["rate > 0.99"],
     "iteration_duration{scenario:embellish_two_image}": [`max<15000`],
     "checks{scenario:embellish_three_image}": ["rate > 0.99"],
@@ -21,18 +21,21 @@ export const options = {
       executor: "per-vu-iterations",
       vus: 1,
       env: { IMAGEVARIABLE: JSON.stringify(variables.embellishOne) },
+      maxDuration: "15s",
     },
     embellish_two_image: {
       executor: "per-vu-iterations",
       vus: 1,
       env: { IMAGEVARIABLE: JSON.stringify(variables.embellishTwo) },
       startTime: "15s",
+      maxDuration: "15s",
     },
     embellish_three_image: {
       executor: "per-vu-iterations",
       vus: 1,
       env: { IMAGEVARIABLE: JSON.stringify(variables.embellishThree) },
       startTime: "30s",
+      maxDuration: "15s",
     },
   },
 };
@@ -68,6 +71,7 @@ export default function (access_token) {
   exitTestIfFail(
     check(startEmbellishResponse, {
       "is status 200": (r) => r.status === 200,
+      "response have data": (r) => r.json().data !== null,
     }),
     "start embellishment is failed"
   );
@@ -103,6 +107,7 @@ export default function (access_token) {
     exitTestIfFail(
       check(jobStatusResponse, {
         "is status 200": (r) => r.status === 200,
+        "response have data": (r) => r.json().data !== null,
       }),
       "get Embellish job status is fail"
     );
