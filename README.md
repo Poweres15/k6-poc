@@ -4,7 +4,7 @@
 
 1. Git Clone Repository with HTTPS or SSH
 
-2. Add env.sh file
+2. Add env.sh file `source env.sh`
 
 3. Run without DB `k6 run test/embellishment.js`
 
