@@ -3,6 +3,7 @@ import { sleep, check, fail } from "k6";
 import { gqlQuery } from "../testData/gqlQuery.js";
 import * as variables from "../testData/queryVariable.js";
 import RequestClass from "../utility/RequestClass.js";
+import getToken from "../utility/getToken.js";
 
 // init context: define k6 options
 export const options = {
@@ -39,7 +40,6 @@ export const options = {
 };
 
 const testNBEId = `3ddd1f77-23b5-4bc7-9059-c32cc1338723`;
-const NBEshop = new RequestClass(testNBEId);
 
 function exitTestIfFail(result, failMessage) {
   if (result === false) {
@@ -47,7 +47,13 @@ function exitTestIfFail(result, failMessage) {
   }
 }
 
-export default function () {
+export function setup() {
+  return getToken();
+}
+
+export default function (access_token) {
+  const NBEshop = new RequestClass(testNBEId, access_token);
+
   let startEmbellishResponse = NBEshop.requestWithOperationName(
     gqlQuery.exportCustomImagePlaceholder.operationName,
     JSON.parse(__ENV.IMAGEVARIABLE)

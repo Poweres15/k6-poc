@@ -4,9 +4,9 @@ import { gqlQuery } from "../testData/gqlQuery.js";
 import http from "k6/http";
 
 export default class RequestClass {
-  constructor(shopId) {
+  constructor(shopId, token) {
     this.shopId = shopId;
-    this.token = null;
+    this.token = token;
   }
 
   generateToken() {
