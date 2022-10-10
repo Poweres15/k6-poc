@@ -1,10 +1,8 @@
 // init context: importing modules
 import { sleep, check, fail } from "k6";
-import http from "k6/http";
-import * as gqlQuery from "../testData/gqlQuery.js";
+import { gqlQuery } from "../testData/gqlQuery.js";
 import * as variables from "../testData/queryVariable.js";
-import getToken from "../utility/getToken.js";
-import requestFactory from "../utility/requestFactory.js";
+import RequestClass from "../utility/RequestClass.js";
 
 // init context: define k6 options
 export const options = {
@@ -40,11 +38,8 @@ export const options = {
   },
 };
 
-export function setup() {
-  return getToken();
-}
-
 const testNBEId = `3ddd1f77-23b5-4bc7-9059-c32cc1338723`;
+const NBEshop = new RequestClass(testNBEId);
 
 function exitTestIfFail(result, failMessage) {
   if (result === false) {
@@ -52,20 +47,10 @@ function exitTestIfFail(result, failMessage) {
   }
 }
 
-export default function (access_token) {
-  const startEmbellish = requestFactory(
-    access_token,
-    testNBEId,
-    gqlQuery.exportCustomImagePlaceholder,
+export default function () {
+  let startEmbellishResponse = NBEshop.requestWithOperationName(
+    gqlQuery.exportCustomImagePlaceholder.operationName,
     JSON.parse(__ENV.IMAGEVARIABLE)
-  );
-
-  let startEmbellishResponse = http.post(
-    startEmbellish.endPoint,
-    startEmbellish.body,
-    {
-      headers: startEmbellish.headers,
-    }
   );
 
   exitTestIfFail(
@@ -76,32 +61,16 @@ export default function (access_token) {
     "start embellishment is failed"
   );
 
-  const getStatusVariable = {
-    id: startEmbellishResponse.json().data.exportCustomImagePlaceholder.jobId,
-    first: 999,
-  };
+  const jobId =
+    startEmbellishResponse.json().data.exportCustomImagePlaceholder.jobId;
 
-  console.log(
-    "jobId",
-    startEmbellishResponse.json().data.exportCustomImagePlaceholder.jobId
-  );
-
-  const getEmbellishJob = requestFactory(
-    access_token,
-    testNBEId,
-    gqlQuery.getDashboardOptimizedJobByIdNB,
-    getStatusVariable
-  );
-
-  let status = "PROCESSING";
+  let status = "PENDING";
   while (status !== "COMPLETED") {
     sleep(1);
-    const jobStatusResponse = http.post(
-      getEmbellishJob.endPoint,
-      getEmbellishJob.body,
-      {
-        headers: getEmbellishJob.headers,
-      }
+
+    let jobStatusResponse = NBEshop.requestWithOperationName(
+      gqlQuery.getDashboardOptimizedJobByIdNB.operationName,
+      { id: jobId, first: 999 }
     );
 
     exitTestIfFail(
